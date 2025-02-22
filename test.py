@@ -13,7 +13,7 @@ print(myList)
 
 overlayList = []
 for imPath in myList:
-    if imPath.lower().endswith((".png", ".jpg", ".jpeg")):  # Ensure it's an image
+    if imPath.lower().endswith((".png", ".jpg", ".jpeg")):  # Ensure its an image
         image = cv2.imread(f'{folderPath}/{imPath}')
         if image is not None:  # Check if image is loaded correctly
             image = cv2.resize(image, (1280, 250))  # Resize images to match header size
@@ -32,11 +32,11 @@ cap.set(3, 1280)
 cap.set(4, 720)
 
 detector = htm.HandTrackingModule(detectionCon=0.85)
-xp, yp = 0, 0
+xp, yp = 800, 50
 imgCanvas = np.zeros((720, 1280, 3), np.uint8)
 
 while True:
-    # 1. Import image
+    # 1. importing image
     success, img = cap.read()
     img = cv2.flip(img, 1)
 
@@ -75,20 +75,25 @@ while True:
         if fingers[1] and fingers[2] == False:
             cv2.circle(img, (x1, y1), 15, (0, 255, 0), cv2.FILLED)
             print("Drawing mode")
-            if xp == 0 and yp == 0:
-                xp, yp = x1, y1
-            if drawColor == (0, 0, 0):
-                cv2.line(img, (xp, yp), (x1, y1), drawColor, eraser)
-                cv2.line(imgCanvas, (xp, yp), (x1, y1), drawColor, eraser)
-            else:
-                cv2.line(img, (xp, yp), (x1, y1), drawColor, brush)
-                cv2.line(imgCanvas, (xp, yp), (x1, y1), drawColor, brush)
+            if (800<x1<1200):
+                
+                # if xp == 800 and yp ==50:
+                #     print("here")    
+
+                    xp, yp = x1, y1
+                    if drawColor == (0, 0, 0):
+                        cv2.line(img, (xp, yp), (x1, y1), drawColor, eraser)
+                        cv2.line(imgCanvas, (xp, yp), (x1, y1), drawColor, eraser)
+                    else:
+                        cv2.line(img, (xp, yp), (x1, y1), drawColor, brush)
+                        cv2.line(imgCanvas, (xp, yp), (x1, y1), drawColor, brush)
 
             xp, yp = x1, y1
 
     # Setting the header image
-    img[0:250, 0:1280] = header
-    img = cv2.addWeighted(img, 0.5, imgCanvas, 0.5, 0)
+    # img[0:250, 0:1280] = header
+    # img[50:600,800:1200] = (255,0,0)
+    img = cv2.addWeighted(img, 0.5, imgCanvas, 0.5, 0) #merge 
     cv2.imshow("Image", img)
 
 
