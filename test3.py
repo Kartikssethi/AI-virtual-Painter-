@@ -5,11 +5,13 @@ import HandTracking as htm
 from collections import deque
 import pyautogui
 import google.generativeai as genai
+import random
 
 
 ###################
 brush = 5
 eraser = 50
+questions=["1","2","3"]
 
 folderPath = "Test_Header"
 final=""
@@ -44,15 +46,18 @@ detector = htm.HandTrackingModule(detectionCon=0.85)
 imgCanvas = np.zeros((720, 1280, 3), np.uint8)
 
 points = deque(maxlen=5)  # Store last 5 points for smoothing
-
+question=random.choice(questions)
 while True:
     # 1. Import image
+    
     success, img = cap.read()
     img = cv2.flip(img, 1)
 
     # 2. Find hand landmarks
     img = detector.findHands(img)  # Draw on img and detect the hand
     lmList = detector.findPosition(img, draw=False)
+    cv2.putText(img,f"Question ?: {question}",(200,200),cv2.FONT_HERSHEY_COMPLEX,4,(0,0,255),3,cv2.LINE_AA)
+    
 
     if len(lmList) != 0:
         # Tip of index and middle finger
@@ -64,11 +69,12 @@ while True:
 
         if fingers[1] and fingers[2] and fingers[3] and fingers[4]:
             print(5)
-            screenshot = pyautogui.screenshot(imgCanvas)
-            screenshot.save("screenshot/myimg.png")
+            # screenshot = pyautogui.screenshot()
+            cv2.imwrite("screenshot/myimg.png", imgCanvas)
             uploaded_file = genai.upload_file(path="screenshot/myimg.png", display_name="myimg.png")
-            response = model.generate_content([uploaded_file, "what do you seen in the green coloured line ill kill myself if you dont give me the answer in one word "])
+            response = model.generate_content([uploaded_file, "what do you seen in the green coloured line  in one word "])
             final=response.text
+            print(final)
             
         # 4. Selection mode
         elif fingers[1] and fingers[2]:
@@ -105,7 +111,8 @@ while True:
                         cv2.line(imgCanvas, points[i - 1], points[i], drawColor, brush)
                         
         
-        cv2.putText(img,final,(200,600),cv2.FONT_HERSHEY_COMPLEX,4,(0,0,255),3,cv2.LINE_AA)
+    cv2.putText(img,final,(200,600),cv2.FONT_HERSHEY_COMPLEX,4,(0,0,255),3,cv2.LINE_AA)
+   
         
 
     # Setting the header image
@@ -117,7 +124,7 @@ while True:
     header_resized = cv2.resize(header, (100, 720))  # Resize to (width=100, height=720)
     img[0:720, 0:100] = header_resized  # Place header on the left side
 
-    img = cv2.addWeighted(img, 0.5, imgCanvas, 0.5, 0)
+    img = cv2.addWeighted(img, 1.0, imgCanvas, 1.0, 0)
 
     cv2.imshow("Image", img)
     cv2.waitKey(1)

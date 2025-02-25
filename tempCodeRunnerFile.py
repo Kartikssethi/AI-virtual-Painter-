@@ -1,1 +1,1 @@
-xp, yp = x1, y1
+ # screenshot = pyautogui.screenshot()
