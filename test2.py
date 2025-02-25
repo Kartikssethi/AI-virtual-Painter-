@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import os
 import HandTracking as htm
+from collections import deque
+
 
 ###################
 brush = 5
@@ -32,8 +34,9 @@ cap.set(3, 1280)
 cap.set(4, 720)
 
 detector = htm.HandTrackingModule(detectionCon=0.85)
-xp, yp = 0, 0
 imgCanvas = np.zeros((720, 1280, 3), np.uint8)
+
+points = deque(maxlen=5)  # Store last 5 points for smoothing
 
 while True:
     # 1. Import image
@@ -69,19 +72,24 @@ while True:
         if fingers[1] and not fingers[2] and 700 < x1 < 1200 and 50 < y1 < 600:
             cv2.circle(img, (x1, y1), 15, (0, 255, 0), cv2.FILLED)
             print("Drawing mode")
-            if xp == 0 and yp == 0:
-                xp, yp = x1, y1
-            if drawColor == (0, 0, 0):
-                cv2.line(img, (xp, yp), (x1, y1), drawColor, eraser)
-                cv2.line(imgCanvas, (xp, yp), (x1, y1), drawColor, eraser)
-            else:
-                cv2.line(img, (xp, yp), (x1, y1), drawColor, brush)
-                cv2.line(imgCanvas, (xp, yp), (x1, y1), drawColor, brush)
 
-            xp, yp = x1, y1
+            # Smooth the points
+            if points:
+                x1 = int(0.7 * points[-1][0] + 0.3 * x1)
+                y1 = int(0.7 * points[-1][1] + 0.3 * y1)
+
+            points.append((x1, y1))  # Store point for smoothing
+
+            if len(points) > 1:
+                for i in range(1, len(points)):
+                    if drawColor == (0, 0, 0):
+                        cv2.line(img, points[i - 1], points[i], drawColor, eraser)
+                        cv2.line(imgCanvas, points[i - 1], points[i], drawColor, eraser)
+                    else:
+                        cv2.line(img, points[i - 1], points[i], drawColor, brush)
+                        cv2.line(imgCanvas, points[i - 1], points[i], drawColor, brush)
 
     # Setting the header image
-    # img[50:600, 700:1200] = (255, 255, 255)
     img[50:600, 700:1200] = cv2.addWeighted(img[50:600, 700:1200], 0.5, np.full_like(img[50:600, 700:1200], (255, 255, 255), dtype=np.uint8), 0.5, 0)
 
     img = cv2.addWeighted(img, 0.5, imgCanvas, 0.5, 0)  # Merge
