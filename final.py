@@ -18,7 +18,7 @@ folderPath = "Test_Header"
 final=""
 myList = os.listdir(folderPath)
 print(myList)
-genai.configure(api_key="")
+genai.configure(api_key="AIzaSyD8Po9zcWq2-91EJ_9aHlDmgMvE13xzqhY")
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
 
@@ -44,7 +44,7 @@ cap.set(3, 1280)
 cap.set(4, 720)
 
 detector = htm.HandTrackingModule(detectionCon=0.85)
-imgCanvas = np.zeros((720, 1280, 3), np.uint8)
+imgCanvas = np.zeros((720, 1280, 3), np.uint8) + 20  # Adding 20 to all color channels
 
 points = deque(maxlen=5)  # Store last 5 points for smoothing
 question=random.choice(questions)
@@ -95,7 +95,7 @@ while True:
     
     # Add scanner line (moving horizontal line)
     scan_line_y = (int(time.time() * 50) % 550) + 50
-    cv2.line(img, (700, scan_line_y), (1200, scan_line_y), (0, 0, 255), 1)  # Blue color
+    cv2.line(img, (700, scan_line_y), (1200, scan_line_y), (57, 255, 20), 3)  # Neon Green, thickness 3
     
     # Add hexagonal pattern to sidebar
     create_hex_pattern(img, 50, 350, 30, (0, 0, 255))  # Blue color
@@ -110,27 +110,12 @@ while True:
         x1, y1 = lmList[8][1:]
         x2, y2 = lmList[12][1:]
 
-        # 3. Check which fingers are up
+        # 3. Check which fingers are up  
         fingers = detector.fingersUp()  # Correct function call
 # Replace finger detection with keyboard input
-        key = cv2.waitKey(100)
-        if key == ord('s'):  # Press 'p' key to trigger the processing
-            print(5)
-            # Add processing effect
-            process_overlay = np.zeros_like(img)
-            cv2.rectangle(process_overlay, (700, 50), (1200, 600), (50, 0, 100), -1)  # Dark purple
-            img = cv2.addWeighted(img, 0.7, process_overlay, 0.3, 0)
-            cv2.putText(img, "PROCESSING...", (850, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)  # Blue text
-            
-            # screenshot = pyautogui.screenshot()
-            cv2.imwrite("screenshot/myimg.png", imgCanvas)
-            uploaded_file = genai.upload_file(path="screenshot/myimg.png", display_name="myimg.png")
-            response = model.generate_content([uploaded_file, "what do you seen in the pink coloured line in one word "])
-            final = response.text
-            print(final)
             
         # 4. Selection mode
-        elif fingers[1] and fingers[2]:
+        if fingers[1] and fingers[2]:
             print("Selection mode")
             # Add futuristic mode indicator
             cv2.putText(img, "SELECT MODE", (20, 680), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1, cv2.LINE_AA)  # Blue text
@@ -144,7 +129,7 @@ while True:
                     cv2.circle(img, (50, 425), 20, (0, 0, 255), 1)  # Blue outline
                 elif 500 < y1 < 600:
                     header = overlayList[1]
-                    drawColor = (0, 0, 0)
+                    drawColor = (20, 20, 20)
                     # Futuristic tool selection indicator
                     cv2.circle(img, (50, 550), 15, (50, 0, 100), -1)  # Darker purple
                     cv2.circle(img, (50, 550), 20, (0, 0, 255), 1)  # Blue outline
@@ -153,6 +138,20 @@ while True:
             cv2.line(img, (x1-15, y1), (x1+15, y1), drawColor, 2)
             cv2.line(img, (x1, y1-15), (x1, y1+15), drawColor, 2)
 
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('s'):
+            print(5)
+            process_overlay = np.zeros_like(img)
+            cv2.rectangle(process_overlay, (700, 50), (1200, 600), (50, 0, 100), -1)  # Dark purple
+            img = cv2.addWeighted(img, 0.7, process_overlay, 0.3, 0)
+            cv2.putText(img, "PROCESSING...", (850, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)  # Blue text
+            
+            # screenshot = pyautogui.screenshot()
+            cv2.imwrite("screenshot/myimg.png", imgCanvas)
+            uploaded_file = genai.upload_file(path="screenshot/myimg.png", display_name="myimg.png")
+            response = model.generate_content([uploaded_file, "what do you seen in the pink coloured line in one word just one no matter what  "])
+            final = response.text
+            print(final)
         # 5. If drawing mode - Index finger is up
         elif fingers[1] and not fingers[2] and 700 < x1 < 1200 and 50 < y1 < 600:
             # Display mode
@@ -172,7 +171,7 @@ while True:
 
             if len(points) > 1:
                 for i in range(1, len(points)):
-                    if drawColor == (0, 0, 0):
+                    if drawColor == (20, 20, 20):
                         cv2.line(img, points[i - 1], points[i], drawColor, eraser)
                         cv2.line(imgCanvas, points[i - 1], points[i], drawColor, eraser)
                     else:
@@ -197,7 +196,7 @@ while True:
     header_resized = cv2.resize(header, (100, 720))  # Resize to (width=100, height=720)
     img[0:720, 0:100] = header_resized  # Place header on the left side
 
-    img = cv2.addWeighted(img, 1.0, imgCanvas, 0.6, 0)
+    img = cv2.addWeighted(img, 1.0, imgCanvas, 1.0, 0)
     
     # Add futuristic tool labels with red color
     cv2.putText(img, "<DRAW>", (25, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)  # Blue text
