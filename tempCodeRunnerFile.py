@@ -1,1 +1,1 @@
- # cv2.line(img, (i, 50), (i, 600), (0, 0, 255), 1, cv2.LINE_AA)  # Blue vertical lines
+"wdsbxfnc","arhaan goat","Hello
