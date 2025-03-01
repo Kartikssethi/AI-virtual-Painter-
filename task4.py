@@ -6,31 +6,35 @@ from collections import deque
 import pyautogui
 import google.generativeai as genai
 import random
-import time
+import time  # Added time module for animations
+
 
 ###################
 brush = 5
 eraser = 50
+questions=[]
 
 folderPath = "Test_Header"
-final = ""
-correct_answer = False
+final=""
 myList = os.listdir(folderPath)
 print(myList)
-genai.configure(api_key="AIzaSyD8Po9zcWq2-91EJ_9aHlDmgMvE13xzqhY")
+genai.configure(api_key="")
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
-# Colors (keeping exactly the same)
+
+# New colors based on the provided pattern
 DEEP_BLUE = (154, 18, 23)  # rgb(23,18,154) in BGR format
-WHITE = (255, 255, 255)  # rgb(255,255,255) in BGR format
-GREEN = (57, 255, 20)
+WHITE = (255, 255, 255)# rgb(255,255,255) in BGR format
+GREEN =(57, 255, 20)
+
+
 
 overlayList = []
 for imPath in myList:
-    if imPath.lower().endswith((".png", ".jpg", ".jpeg",".svg")):  # Ensure it's an image
+    if imPath.lower().endswith((".png", ".jpg", ".jpeg")):  # Ensure it's an image
         image = cv2.imread(f'{folderPath}/{imPath}')
         if image is not None:  # Check if image is loaded correctly
-            image = cv2.resize(image, (1280, 1000))  
+            image = cv2.resize(image, (1280, 400))  
             overlayList.append(image)
 
 print(len(overlayList))
@@ -49,23 +53,10 @@ detector = htm.HandTrackingModule(detectionCon=0.85)
 imgCanvas = np.zeros((720, 1280, 3), np.uint8) + 20  # Adding 20 to all color channels
 
 points = deque(maxlen=5)  # Store last 5 points for smoothing
-
-# Get a random drawing prompt from Gemini
-def get_random_question():
-    try:
-        prompt = "Give me one random simple object to draw. Respond with only a single word or short phrase (2-3 words maximum). The object should be simple enough to draw in a few strokes."
-        response = model.generate_content(prompt)
-        return response.text.strip()
-    except Exception as e:
-        print(f"Error generating question: {e}")
-        return "apple"  # Default fallback
-
-# Initialize with a random question
-question = get_random_question()
-expected_answer = question.lower()
+question=random.choice(questions)
 
 # Create futuristic UI elements
-def create_hex_pattern(img, x, y, size=20, color=DEEP_BLUE):
+def create_hex_pattern(img, x, y, size=20, color=DEEP_BLUE):  # Updated to deep blue
     points = []
     for i in range(6):
         angle_rad = i * 2 * np.pi / 6
@@ -109,15 +100,15 @@ while True:
    
     # Add scanner line (moving horizontal line)
     scan_line_y = (int(time.time() * 50) % 550) + 50
-    cv2.line(img, (700, scan_line_y), (1200, scan_line_y), GREEN, 3)  # Green scanner line
+    cv2.line(img, (700, scan_line_y), (1200, scan_line_y),(57, 255, 20), 3)  # White scanner line
    
     # Add hexagonal pattern to sidebar
     create_hex_pattern(img, 50, 350, 30, DEEP_BLUE)  # Deep blue pattern
    
     # Display question with futuristic styling
-    cv2.rectangle(img, (190, 170), (610, 230), DEEP_BLUE, -1)  # Darker blue background
+    cv2.rectangle(img, (190, 170), (610, 230),DEEP_BLUE, -1)  # Darker blue background
     cv2.rectangle(img, (190, 170), (610, 230), DEEP_BLUE, 1)  # Deep blue border
-    cv2.putText(img, f"DRAW: {question}", (200, 210), cv2.FONT_HERSHEY_SIMPLEX, 1, WHITE, 2, cv2.LINE_AA)  # White text
+    cv2.putText(img, f"TASK: {question}", (200, 210), cv2.FONT_HERSHEY_SIMPLEX, 1, WHITE, 2, cv2.LINE_AA)  # White text
 
     if len(lmList) != 0:
         # Tip of index and middle finger
@@ -125,7 +116,8 @@ while True:
         x2, y2 = lmList[12][1:]
 
         # 3. Check which fingers are up  
-        fingers = detector.fingersUp()
+        fingers = detector.fingersUp()  # Correct function call
+# Replace finger detection with keyboard input
            
         # 4. Selection mode
         if fingers[1] and fingers[2]:
@@ -153,36 +145,18 @@ while True:
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord('s'):
-            print("Processing drawing...")
+            print(5)
             process_overlay = np.zeros_like(img)
             cv2.rectangle(process_overlay, (700, 50), (1200, 600), (23, 18, 80), -1)  # Darker blue
             img = cv2.addWeighted(img, 0.7, process_overlay, 0.3, 0)
             cv2.putText(img, "PROCESSING...", (850, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, WHITE, 2, cv2.LINE_AA)  # White text
            
-            # Save the canvas for Gemini to analyze
+            # screenshot = pyautogui.screenshot()
             cv2.imwrite("screenshot/myimg.png", imgCanvas)
             uploaded_file = genai.upload_file(path="screenshot/myimg.png", display_name="myimg.png")
-            response = model.generate_content([uploaded_file, "What object is drawn in this image? Respond with only a single word."])
-            final = response.text.strip().lower()
-            print(f"AI guessed: {final}, Expected: {expected_answer}")
-            
-            # Check if the answer matches the expected
-            if final.lower() in expected_answer.lower() or expected_answer.lower() in final.lower():
-                correct_answer = True
-            else:
-                correct_answer = False
-                
-        # Generate a new question when 'n' is pressed
-        elif key == ord('n'):
-            # Clear the canvas
-            imgCanvas = np.zeros((720, 1280, 3), np.uint8) + 20
-            # Get a new question``
-            question = get_random_question()
-            expected_answer = question.lower()
-            final = ""  # Reset the final answer
-            correct_answer = False
-            print(f"New question: {question}")
-            
+            response = model.generate_content([uploaded_file, "what do you seen in the  coloured line in one word just one no matter what "])
+            final = response.text
+            print(final)
         # 5. If drawing mode - Index finger is up
         elif fingers[1] and not fingers[2] and 700 < x1 < 1200 and 50 < y1 < 600:
             # Display mode
@@ -214,17 +188,9 @@ while True:
                        
     # Display AI result with futuristic styling
     if final:
-        cv2.rectangle(img, (190, 490), (610, 570), DEEP_BLUE, -1)  # Darker blue background
-        cv2.rectangle(img, (190, 490), (610, 570), DEEP_BLUE, 1)  # Deep blue border
-        cv2.putText(img, f"AI'S GUESS: {final}", (200, 530), cv2.FONT_HERSHEY_SIMPLEX, 1, WHITE, 2, cv2.LINE_AA)  # White text
-        
-        # Display correct/incorrect result
-        result_color = GREEN if correct_answer else (20, 20, 255)  # Green if correct, red if wrong
-        result_text = "CORRECT!" if correct_answer else "INCORRECT!"
-        
-        cv2.rectangle(img, (190, 580), (610, 660), DEEP_BLUE, -1)  # Darker blue background
-        cv2.rectangle(img, (190, 580), (610, 660), DEEP_BLUE, 1)  # Deep blue border
-        cv2.putText(img, result_text, (200, 630), cv2.FONT_HERSHEY_SIMPLEX, 1.5, result_color, 2, cv2.LINE_AA)
+        cv2.rectangle(img, (190, 550), (610, 630), DEEP_BLUE, -1)  # Darker blue background
+        cv2.rectangle(img, (190, 550), (610, 630), DEEP_BLUE, 1)  # Deep blue border
+        cv2.putText(img, f"AI's GUESS: {final}", (200, 600), cv2.FONT_HERSHEY_SIMPLEX, 1, WHITE, 2, cv2.LINE_AA)  # White text
    
     # Setting the header image
     img[50:600, 700:1200] = cv2.addWeighted(img[50:600, 700:1200], 0.5, np.full_like(img[50:600, 700:1200], WHITE, dtype=np.uint8), 0.5, 0)
@@ -240,15 +206,14 @@ while True:
     # Add futuristic tool labels with white color
     cv2.putText(img, "<DRAW>", (25, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1, cv2.LINE_AA)  # White text
     cv2.putText(img, "<ERASE>", (25, 550), cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1, cv2.LINE_AA)  # White text
-    
-    # Add instructions
-    cv2.putText(img, "Press 'S' to submit", (850, 650), cv2.FONT_HERSHEY_SIMPLEX, 0.6, WHITE, 1, cv2.LINE_AA)
-    cv2.putText(img, "Press 'N' for new question", (850, 680), cv2.FONT_HERSHEY_SIMPLEX, 0.6, WHITE, 1, cv2.LINE_AA)
    
-    cv2.imshow("NEURO-DRAW v2.0", img)
-    
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    # Add subtle grid pattern to drawing area
+    # for i in range(750, 1151, 50):
+    #     alpha = 0.2  # Make lines subtle
+    #     cv2.line(img, (i, 50), (i, 600), DEEP_BLUE, 1, cv2.LINE_AA)  # Deep blue vertical lines
+    #     cv2.line(img, (700, 50 + (i-750)), (1200, 50 + (i-750)), WHITE, 1, cv2.LINE_AA)  # White horizontal lines
+   
+    # Add app title
 
-cap.release()
-cv2.destroyAllWindows()
+    cv2.imshow("NEURO-DRAW v2.0", img)
+    cv2.waitKey(1)
