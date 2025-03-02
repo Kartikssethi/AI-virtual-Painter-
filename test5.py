@@ -31,7 +31,7 @@ for imPath in myList:
     if imPath.lower().endswith((".png", ".jpg", ".jpeg",".svg")):  # Ensure it's an image
         image = cv2.imread(f'{folderPath}/{imPath}')
         if image is not None:  # Check if image is loaded correctly
-            image = cv2.resize(image, (700, 700))  
+            image = cv2.resize(image, (1280, 700))  
             overlayList.append(image)
 print(len(overlayList))
 if overlayList:  # Ensure at least one image is loaded
