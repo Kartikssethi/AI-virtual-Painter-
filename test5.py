@@ -18,7 +18,7 @@ final = ""
 correct_answer = False
 myList = os.listdir(folderPath)
 print(myList)
-genai.configure(api_key="AIzaSyD8Po9zcWq2-91EJ_9aHlDmgMvE13xzqhY")
+genai.configure(api_key="...")
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
 # Colors (keeping exactly the same)

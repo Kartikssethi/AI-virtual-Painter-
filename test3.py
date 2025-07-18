@@ -17,7 +17,7 @@ folderPath = "Test_Header"
 final=""
 myList = os.listdir(folderPath)
 print(myList)
-genai.configure(api_key="")
+genai.configure(api_key="...")
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
 
