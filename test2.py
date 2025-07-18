@@ -67,7 +67,7 @@ while True:
             screenshot = pyautogui.screenshot(imgCanvas)
             screenshot.save("screenshot/myimg.png")
             uploaded_file = genai.upload_file(path="screenshot/myimg.png", display_name="myimg.png")
-            response = model.generate_content([uploaded_file, "what do you seen in the green coloured line ill kill myself if you dont give me the answer in one word "])
+            response = model.generate_content([uploaded_file, "what do you seen in the green coloured line  give me the answer in one word "])
             final=response.text
             
         # 4. Selection mode
